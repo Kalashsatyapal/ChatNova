@@ -62,7 +62,7 @@ app.get("/test-api", async (req, res) => {
 
 // 🔹 Chat Route (Requires Authentication)
 app.post("/chat", verifyUser, async (req, res) => {
-  const { message, chat_id } = req.body;
+  const { message, chat_id, category = "casual" } = req.body; // 💡 Added category
   const userId = req.user.id;
 
   if (!message)
@@ -110,6 +110,7 @@ app.post("/chat", verifyUser, async (req, res) => {
           {
             user_id: userId,
             messages: [{ user_message: message, ai_response: aiResponse }],
+            category, // 💡 Save the category
           },
         ])
         .select("id")
@@ -124,13 +125,14 @@ app.post("/chat", verifyUser, async (req, res) => {
   }
 });
 
+
 // 🔹 Fetch Chat History (Requires Authentication)
 app.get("/chat-history", verifyUser, async (req, res) => {
   const userId = req.user.id;
   try {
     const { data, error } = await supabase
       .from("chats")
-      .select("id, messages, created_at")
+      .select("id, messages, created_at, category") // 👈 include category
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
@@ -140,6 +142,7 @@ app.get("/chat-history", verifyUser, async (req, res) => {
       id: chat.id,
       title: chat.messages?.[0]?.user_message || "Untitled Chat",
       messages: chat.messages,
+      category: chat.category || "casual", // 👈 include in response
     }));
 
     return res.json({ history: chatHistory });
@@ -148,6 +151,7 @@ app.get("/chat-history", verifyUser, async (req, res) => {
     return res.status(500).json({ error: "❌ Failed to fetch chat history." });
   }
 });
+
 
 // 🔹 Delete Chat Route (Requires Authentication)
 app.delete("/delete-chat", verifyUser, async (req, res) => {

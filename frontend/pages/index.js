@@ -9,7 +9,7 @@ import {
   FaMoon,
 } from "react-icons/fa";
 import Auth from "../components/Auth";
-import Rating from "../components/rating" ;
+import Rating from "../components/rating";
 import io from "socket.io-client";
 
 // Prevent multiple socket connections
@@ -26,6 +26,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [activeChat, setActiveChat] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [chatCategory, setChatCategory] = useState("casual");
 
   useEffect(() => {
     const storedDarkMode = localStorage.getItem("darkMode");
@@ -103,7 +104,11 @@ export default function Home() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ message, chat_id: activeChat }),
+      body: JSON.stringify({
+        message,
+        chat_id: activeChat,
+        category: chatCategory, // ✅ Send category to backend
+      }),
     });
 
     const data = await res.json();
@@ -125,6 +130,7 @@ export default function Home() {
         const newChat = {
           id: data.chat_id,
           title: message,
+          category: chatCategory,
           messages: [newChatEntry],
         };
         setChatHistory([newChat, ...chatHistory]);
@@ -231,16 +237,23 @@ export default function Home() {
               }`}
               onClick={() => setActiveChat(chat.id)}
             >
-              {chat.title}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteChatHistory(chat.id);
-                }}
-                className="p-1 rounded text-white bg-red-500 mx-2"
-              >
-                <FaTrashAlt size={16} />
-              </button>
+              <div className="flex justify-between items-center">
+                <div>
+                  <strong>{chat.title}</strong>
+                  <div className="text-xs text-gray-500">
+                    {chat.category || "casual"}
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteChatHistory(chat.id);
+                  }}
+                  className="p-1 rounded text-white bg-red-500 mx-2"
+                >
+                  <FaTrashAlt size={16} />
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -253,19 +266,26 @@ export default function Home() {
             ChatNova
           </h1>
           <div className="flex gap-2">
-            <button onClick={toggleDarkMode} className="p-2 bg-gray-700 text-white rounded">
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 bg-gray-700 text-white rounded"
+            >
               {darkMode ? <FaSun /> : <FaMoon />}
             </button>
             <button
               onClick={() => {
                 setActiveChat(null);
                 setMessage("");
+                setChatCategory("casual"); // ✅ Reset category
               }}
               className="p-2 bg-green-500 text-white rounded"
             >
               <FaPlus />
             </button>
-            <button onClick={handleLogout} className="p-2 bg-red-500 text-white rounded">
+            <button
+              onClick={handleLogout}
+              className="p-2 bg-red-500 text-white rounded"
+            >
               <FaSignOutAlt />
             </button>
           </div>
@@ -276,6 +296,13 @@ export default function Home() {
             darkMode ? "bg-gray-800" : "bg-gray-100"
           }`}
         >
+          {loading && (
+            <div className="flex justify-center items-center mb-4">
+              <div className="text-blue-500 font-semibold animate-pulse">
+                Generating AI response...
+              </div>
+            </div>
+          )}
           {activeChat &&
           chatHistory.find((chat) => chat.id === activeChat)?.messages
             .length ? (
@@ -290,7 +317,9 @@ export default function Home() {
                   <div className="font-semibold">AI:</div>
                   <div
                     className={`p-3 rounded shadow ${
-                      darkMode ? "bg-blue-500 text-white" : "bg-blue-100 text-black"
+                      darkMode
+                        ? "bg-blue-500 text-white"
+                        : "bg-blue-100 text-black"
                     }`}
                   >
                     {formatAIResponse(msg.ai_response)}
@@ -309,6 +338,15 @@ export default function Home() {
         {error && <p className="text-red-500 mt-2">{error}</p>}
 
         <div className="flex mt-4 gap-2">
+          <select
+            value={chatCategory}
+            onChange={(e) => setChatCategory(e.target.value)}
+            className="p-2 rounded border"
+          >
+            <option value="casual">Casual</option>
+            <option value="professional">Professional</option>
+            <option value="creative">Creative</option>
+          </select>
           <input
             type="text"
             className={`flex-1 p-2 border rounded ${
