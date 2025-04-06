@@ -28,7 +28,6 @@ const Auth = ({ onAuthSuccess }) => {
     }
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
-
     if (userError) return setError(userError.message);
 
     if (!userData?.user?.email_confirmed_at) {
@@ -39,63 +38,69 @@ const Auth = ({ onAuthSuccess }) => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-24 p-8 bg-white shadow-2xl rounded-2xl border border-gray-100">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
-        {isLogin ? "Sign In" : "Sign Up"}
-      </h2>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md p-8 bg-white shadow-xl rounded-xl border border-gray-200">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          {isLogin ? "Sign In" : "Sign Up"}
+        </h2>
 
-      {error && (
-        <p className="text-red-600 text-sm text-center mb-4">{error}</p>
-      )}
-      {success && (
-        <p className="text-green-600 text-sm text-center mb-4">{success}</p>
-      )}
+        {error && (
+          <div className="bg-red-100 text-red-700 text-sm rounded-md px-4 py-2 mb-4 text-center">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-100 text-green-700 text-sm rounded-md px-4 py-2 mb-4 text-center">
+            {success}
+          </div>
+        )}
 
-      <div className="space-y-4">
-        <input
-          type="email"
-          className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Enter your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button
-          className={`w-full py-3 rounded-lg font-semibold transition duration-200 ${
-            loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-          } text-white`}
-          onClick={handleAuth}
-          disabled={loading}
-        >
-          {loading
-            ? isLogin
-              ? "Logging in..."
-              : "Signing up..."
-            : isLogin
-            ? "Login"
-            : "Sign Up"}
-        </button>
+        <div className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <button
+            onClick={handleAuth}
+            disabled={loading}
+            className={`w-full py-3 rounded-lg font-semibold text-white transition duration-300 ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {loading
+              ? isLogin
+                ? "Logging in..."
+                : "Signing up..."
+              : isLogin
+              ? "Login"
+              : "Sign Up"}
+          </button>
+        </div>
+
+        <p className="text-sm text-gray-600 text-center mt-6">
+          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-blue-600 font-medium hover:underline"
+          >
+            {isLogin ? "Sign Up" : "Login"}
+          </button>
+        </p>
       </div>
-
-      <p className="text-center mt-6 text-sm text-gray-600">
-        {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-        <button
-          className="text-blue-600 font-medium hover:underline"
-          onClick={() => setIsLogin(!isLogin)}
-        >
-          {isLogin ? "Sign Up" : "Login"}
-        </button>
-      </p>
     </div>
   );
 };
