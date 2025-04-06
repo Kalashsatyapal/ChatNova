@@ -199,6 +199,19 @@ app.post("/rate-response", verifyUser, async (req, res) => {
   }
 });
 
+// 🔹 Root Route - Display an <h1> for basic check
+app.get("/", (req, res) => {
+  res.send(`
+    <html>
+      <head><title>ChatNova API</title></head>
+      <body style="font-family: Arial; text-align: center; margin-top: 50px;">
+        <h1>🚀 Welcome to ChatNova Backend API</h1>
+        <p>Your server is up and running!</p>
+      </body>
+    </html>
+  `);
+});
+
 // Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
