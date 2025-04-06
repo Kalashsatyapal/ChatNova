@@ -24,62 +24,73 @@ const Auth = ({ onAuthSuccess }) => {
 
     if (!isLogin) {
       setSuccess("Sign-up successful! Please check your email to verify your account.");
-      return; // Stop execution after signup
+      return;
     }
 
-    // ✅ Check if user is verified before proceeding
     const { data: userData, error: userError } = await supabase.auth.getUser();
-    
+
     if (userError) return setError(userError.message);
-    
+
     if (!userData?.user?.email_confirmed_at) {
       return setError("Please confirm your email before logging in.");
     }
 
-    // ✅ Only proceed if the email is verified
     onAuthSuccess(userData.user);
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold mb-4 text-center">
+    <div className="max-w-md mx-auto mt-24 p-8 bg-white shadow-2xl rounded-2xl border border-gray-100">
+      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
         {isLogin ? "Sign In" : "Sign Up"}
       </h2>
 
-      {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-      {success && <p className="text-green-500 text-sm text-center">{success}</p>}
+      {error && (
+        <p className="text-red-600 text-sm text-center mb-4">{error}</p>
+      )}
+      {success && (
+        <p className="text-green-600 text-sm text-center mb-4">{success}</p>
+      )}
 
-      <input
-        type="email"
-        className="w-full p-3 border rounded mb-2"
-        placeholder="Enter your email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        className="w-full p-3 border rounded mb-2"
-        placeholder="Enter your password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
+      <div className="space-y-4">
+        <input
+          type="email"
+          className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button
+          className={`w-full py-3 rounded-lg font-semibold transition duration-200 ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          } text-white`}
+          onClick={handleAuth}
+          disabled={loading}
+        >
+          {loading
+            ? isLogin
+              ? "Logging in..."
+              : "Signing up..."
+            : isLogin
+            ? "Login"
+            : "Sign Up"}
+        </button>
+      </div>
 
-      <button
-        className={`w-full p-3 rounded mt-3 ${
-          loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
-        } text-white`}
-        onClick={handleAuth}
-        disabled={loading}
-      >
-        {loading ? (isLogin ? "Logging in..." : "Signing up...") : isLogin ? "Login" : "Sign Up"}
-      </button>
-
-      <p className="text-center mt-3">
+      <p className="text-center mt-6 text-sm text-gray-600">
         {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
         <button
-          className="text-blue-500 hover:underline"
+          className="text-blue-600 font-medium hover:underline"
           onClick={() => setIsLogin(!isLogin)}
         >
           {isLogin ? "Sign Up" : "Login"}
