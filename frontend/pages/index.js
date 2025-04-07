@@ -16,29 +16,6 @@ export default function Home() {
   const [activeChat, setActiveChat] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [chatCategory, setChatCategory] = useState("casual");
-  const ChatLayout = ({ children, user }) => {
-  const [seconds, setSeconds] = useState(0);
-  const [isActive, setIsActive] = useState(false);
-  useEffect(() => {
-    if (user) {
-      setIsActive(true);
-      setSeconds(0); // Reset on new login
-    }
-  }, [user]);
-  useEffect(() => {
-    let interval;
-    if (isActive) {
-      interval = setInterval(() => {
-        setSeconds((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isActive]);
-  const formatTime = (secs) => {
-    const minutes = Math.floor(secs / 60);
-    const seconds = secs % 60;
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  };
   useEffect(() => {
     const storedDarkMode = localStorage.getItem("darkMode");
     setDarkMode(storedDarkMode === "true");
@@ -255,12 +232,6 @@ export default function Home() {
             ChatNova
           </h1>
           <div className="flex gap-2">
-             {/* Stopwatch */}
-        {user && (
-          <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm">
-            ⏱️ {formatTime(seconds)}
-          </div>
-        )}
             <button
               onClick={toggleDarkMode}
               className="p-2 bg-gray-700 text-white rounded"
@@ -359,4 +330,4 @@ export default function Home() {
       </div>
     </div>
   );
-}}
+}
