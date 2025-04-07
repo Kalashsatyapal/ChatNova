@@ -1,23 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import {
-  FaPaperPlane,
-  FaSignOutAlt,
-  FaTrashAlt,
-  FaPlus,
-  FaSun,
-  FaMoon,
-} from "react-icons/fa";
+import {FaPaperPlane,FaSignOutAlt,FaTrashAlt,FaPlus,FaSun,FaMoon,} from "react-icons/fa";
 import Auth from "../components/Auth";
 import Rating from "../components/rating";
 import io from "socket.io-client";
-
 // Prevent multiple socket connections
 let socket;
-if (!socket) {
-  socket = io(process.env.NEXT_PUBLIC_BACKEND_URL);
-}
-
+if (!socket) {socket = io(process.env.NEXT_PUBLIC_BACKEND_URL);}
 export default function Home() {
   const [user, setUser] = useState(null);
   const [message, setMessage] = useState("");
@@ -27,38 +16,54 @@ export default function Home() {
   const [activeChat, setActiveChat] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [chatCategory, setChatCategory] = useState("casual");
-
+  const ChatLayout = ({ children, user }) => {
+  const [seconds, setSeconds] = useState(0);
+  const [isActive, setIsActive] = useState(false);
+  useEffect(() => {
+    if (user) {
+      setIsActive(true);
+      setSeconds(0); // Reset on new login
+    }
+  }, [user]);
+  useEffect(() => {
+    let interval;
+    if (isActive) {
+      interval = setInterval(() => {
+        setSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isActive]);
+  const formatTime = (secs) => {
+    const minutes = Math.floor(secs / 60);
+    const seconds = secs % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  };
   useEffect(() => {
     const storedDarkMode = localStorage.getItem("darkMode");
     setDarkMode(storedDarkMode === "true");
   }, []);
-
   const toggleDarkMode = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
     localStorage.setItem("darkMode", newMode);
   };
-
   useEffect(() => {
     const getSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data?.session) setUser(data.session.user);
     };
-
     getSession();
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setUser(session ? session.user : null);
       }
     );
-
     return () => listener?.subscription?.unsubscribe();
   }, []);
-
   useEffect(() => {
     if (user) fetchChatHistory();
   }, [user]);
-
   useEffect(() => {
     socket.on("new_message", (messageData) => {
       setChatHistory((prevHistory) => {
@@ -75,10 +80,8 @@ export default function Home() {
         return updatedHistory;
       });
     });
-
     return () => socket.off("new_message");
   }, []);
-
   const fetchChatHistory = async () => {
     if (!user) return;
     const token = (await supabase.auth.getSession()).data.session?.access_token;
@@ -91,12 +94,10 @@ export default function Home() {
     const data = await res.json();
     if (data.history) setChatHistory(data.history);
   };
-
   const sendMessage = async () => {
     if (!message.trim()) return;
     setLoading(true);
     setError("");
-
     const token = (await supabase.auth.getSession()).data.session?.access_token;
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/chat`, {
       method: "POST",
@@ -110,10 +111,8 @@ export default function Home() {
         category: chatCategory, // ✅ Send category to backend
       }),
     });
-
     const data = await res.json();
     setLoading(false);
-
     if (data.error) {
       setError(data.error);
     } else {
@@ -137,7 +136,6 @@ export default function Home() {
         setActiveChat(data.chat_id);
       }
       setMessage("");
-
       socket.emit("send_message", {
         message,
         ai_response: data.answer,
@@ -145,7 +143,6 @@ export default function Home() {
       });
     }
   };
-
   const deleteChatHistory = async (chatId) => {
     const token = (await supabase.auth.getSession()).data.session?.access_token;
     const res = await fetch(
@@ -159,7 +156,6 @@ export default function Home() {
         body: JSON.stringify({ chat_id: chatId }),
       }
     );
-
     const data = await res.json();
     if (data.success) {
       setChatHistory(chatHistory.filter((chat) => chat.id !== chatId));
@@ -168,12 +164,10 @@ export default function Home() {
       setError(data.error || "Failed to delete chat.");
     }
   };
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
   };
-
   const handleRating = async (chatId, messageIndex, rating) => {
     const token = (await supabase.auth.getSession()).data.session?.access_token;
 
@@ -189,7 +183,6 @@ export default function Home() {
         rating,
       }),
     });
-
     setChatHistory((prevHistory) =>
       prevHistory.map((chat) =>
         chat.id === chatId
@@ -203,14 +196,11 @@ export default function Home() {
       )
     );
   };
-
   const formatAIResponse = (response) => {
     const sentences = response.split(/(?<=[.!?])\s+/);
     return sentences.map((sentence, index) => <p key={index}>{sentence}</p>);
   };
-
   if (!user) return <Auth onAuthSuccess={setUser} />;
-
   return (
     <div
       className={`flex h-screen ${
@@ -258,7 +248,6 @@ export default function Home() {
           ))}
         </ul>
       </div>
-
       {/* Chat Area */}
       <div className="flex-1 p-4 ml-64">
         <div className="flex justify-between items-center mb-4">
@@ -266,6 +255,12 @@ export default function Home() {
             ChatNova
           </h1>
           <div className="flex gap-2">
+             {/* Stopwatch */}
+        {user && (
+          <div className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm">
+            ⏱️ {formatTime(seconds)}
+          </div>
+        )}
             <button
               onClick={toggleDarkMode}
               className="p-2 bg-gray-700 text-white rounded"
@@ -290,7 +285,6 @@ export default function Home() {
             </button>
           </div>
         </div>
-
         <div
           className={`border p-4 rounded h-[65vh] overflow-auto ${
             darkMode ? "bg-gray-800" : "bg-gray-100"
@@ -334,9 +328,7 @@ export default function Home() {
             <p className="text-gray-500">No chat history yet.</p>
           )}
         </div>
-
         {error && <p className="text-red-500 mt-2">{error}</p>}
-
         <div className="flex mt-4 gap-2">
           <select
             value={chatCategory}
@@ -367,4 +359,4 @@ export default function Home() {
       </div>
     </div>
   );
-}
+}}

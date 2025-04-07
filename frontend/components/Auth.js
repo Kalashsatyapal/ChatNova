@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
 const Auth = ({ onAuthSuccess }) => {
@@ -8,6 +8,7 @@ const Auth = ({ onAuthSuccess }) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+  const [user, setUser] = useState(null);
 
   const handleAuth = async () => {
     setLoading(true);
@@ -19,13 +20,10 @@ const Auth = ({ onAuthSuccess }) => {
       : await supabase.auth.signUp({ email, password });
 
     setLoading(false);
-
     if (error) return setError(error.message);
 
     if (!isLogin) {
-      setSuccess(
-        "Sign-up successful! Please check your email to verify your account."
-      );
+      setSuccess("Sign-up successful! Please check your email to verify your account.");
       return;
     }
 
@@ -36,8 +34,25 @@ const Auth = ({ onAuthSuccess }) => {
       return setError("Please confirm your email before logging in.");
     }
 
+    setUser(userData.user); // Set user state
     onAuthSuccess(userData.user);
   };
+
+  // Automatically logout after 1 minute
+  useEffect(() => {
+    if (user) {
+      const timer = setTimeout(async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+        setEmail("");
+        setPassword("");
+        setSuccess("");
+        setError("Session expired. Please login again.");
+      }, 60000); // 1 minute
+
+      return () => clearTimeout(timer); // Clear on unmount
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
